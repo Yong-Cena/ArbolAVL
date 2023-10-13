@@ -80,6 +80,25 @@ public class NodoBin <T extends Comparable <T>>{
         this.papa = papa;
     }
     
+    public void cuelga(NodoBin <T> papa,char direccion)
+    {
+        if(direccion=='I')
+        {
+            izq=papa;
+        }
+        else
+        {
+            if(direccion=='D')
+            {
+                der=papa;
+            }
+            else
+            {
+                papa.setPapa(this);
+            }
+        }
+    }
+    
     public String toString()
     {
         String respuesta="";

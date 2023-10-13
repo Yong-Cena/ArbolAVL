@@ -12,38 +12,12 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
         cont=0;
     }
     
-    public void inserta(T elem) {
-        NodoBin<T> nuevo = new NodoBin<T>(elem);
-        if (raiz == null) 
-        {
-            raiz = nuevo;
-        } 
-        else 
-        {
-            NodoBin<T> papa = null;
-            NodoBin<T> actual = raiz;
+    public boolean isEmpty() {
+        return raiz==null;
+    }
 
-            while (actual != null) 
-            {
-                papa = actual;
-                if (elem.compareTo(actual.getElem()) <= 0) 
-                {
-                    actual = actual.getIzq();
-                } else {
-                    actual = actual.getDer();
-                }
-            }
-
-            if (elem.compareTo(papa.getElem()) <= 0) 
-            {
-                papa.setIzq(nuevo);
-            } else {
-                papa.setDer(nuevo);
-            }
-            nuevo.cuelga(papa);
-            actualizarFe(nuevo);
-        }
-        cont++;
+    public int size() {
+        return cont;
     }
     
     private void actualizarFe(NodoBin<T> actual)
@@ -66,22 +40,69 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
         return resp;
     }
     
-/*    private NodoBin<T> insertaR(NodoBin<T> actual, NodoBin<T> nuevo) 
+    public int getAltura(NodoBin<T> actual)
     {
-        if (actual == null) 
+        if(actual==null)
         {
-            return nuevo;
+            return 0;
         }
-
-        if (nuevo.getElem().compareTo(actual.getElem()) <= 0) {
-            actual.setIzq(insertaR(actual.getIzq(), nuevo));
-        } else {
-            actual.setDer(insertaR(actual.getDer(), nuevo));
+        int a1= getAltura(actual.getIzq());
+        int a2= getAltura(actual.getDer());
+        return Math.max(a1,a2)+1;
+    }
+    
+    public Object findMin() {
+        NodoBin<T> actual=raiz;
+        while(actual!=null && actual.getIzq()!=null)
+        {
+            actual= actual.getIzq();
         }
-        
         return actual;
     }
-*/    
+
+    public Object findMax() {
+        NodoBin<T> actual=raiz;
+        while(actual!=null && actual.getDer()!=null)
+        {
+            actual= actual.getDer();
+        }
+        return actual;
+    }
+    
+    public void inserta(T elem) {
+        NodoBin<T> nuevo = new NodoBin<>(elem);
+        if (raiz == null) 
+        {
+            raiz = nuevo;
+        } 
+        else 
+        {
+            NodoBin<T> papa = null;
+            NodoBin<T> actual = raiz;
+
+            while (actual != null) 
+            {
+                papa = actual;
+                if (elem.compareTo(actual.getElem()) < 0) 
+                {
+                    actual = actual.getIzq();
+                } else {
+                    actual = actual.getDer();
+                }
+            }
+
+            if (elem.compareTo(papa.getElem()) < 0) 
+            {
+                papa.setIzq(nuevo);
+            } else {
+                papa.setDer(nuevo);
+            }
+            nuevo.cuelga(papa);
+            actualizarFe(nuevo);
+        }
+        cont++;
+    }
+     
     public void borra (T elem)
     {
         NodoBin<T> actual=encuentra(elem);
@@ -151,32 +172,6 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
         }
         actualizarFe(papa);
     }
-
-    public Object findMin() {
-        NodoBin<T> actual=raiz;
-        while(actual!=null && actual.getIzq()!=null)
-        {
-            actual= actual.getIzq();
-        }
-        return actual;
-    }
-
-    public Object findMax() {
-        NodoBin<T> actual=raiz;
-        while(actual!=null && actual.getDer()!=null)
-        {
-            actual= actual.getDer();
-        }
-        return actual;
-    }
-
-    public boolean isEmpty() {
-        return raiz==null;
-    }
-
-    public int size() {
-        return cont;
-    }
     
     public NodoBin<T> encuentra(T elem) {
         return encuentraR(elem,raiz);
@@ -200,25 +195,176 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
         return res;
     }
     
-    
-    /*
-    public void insertaAVL(Nodo <T> nuevo)
+    public String toStringNivel()
     {
-        Nodo <T> actual=nuevo;
-        while(!termine && actual!= raiz)
-            papa=actual.papa;
-            if(actual.elem<papa.elem)
-                papa.fe+=1;
-            else
-                papa.fe+=1;
-            if(Math.abs(papa.fe)==2)
-                termine=true;
-                actual=rota(papa);
-            else
-                termine= (papa.fe==0);
-                actual=actual.papa;
+        String respuesta;
+        if(raiz!=null)
+        {
+            respuesta=" ARBOLITO"+"\n"+"-------------------"+"\n";
+            respuesta+="["+raiz.getElem()+" ,"+raiz.getFe()+"]"+"\n";
+        
+            NodoBin<T> actual= raiz;
+            ArrayQueue<NodoBin> cola= new ArrayQueue();
+            ArrayList<T> lista= new ArrayList();
+            cola.enqueue(raiz);
+            while(actual!=null && !cola.isEmpty())
+            {
+                actual= cola.dequeue();
+                lista.add(actual.getElem());
+                Integer fe= actual.getFe();
+                lista.add((T) fe);
+                if(actual.getIzq()!=null)
+                {
+                    cola.enqueue(actual.getIzq());
+                }
+                if(actual.getDer()!=null)
+                {
+                    cola.enqueue(actual.getDer());
+                }
+            }
+        
+            int c=1,ex=1;
+            for(int i=2;i<lista.size()-1;i=i+2)
+            {
+                respuesta+= "["+ lista.get(i)+" ,";
+                respuesta+= lista.get(i+1)+"]"+" ";
+                if(c== Math.pow(2, ex))
+                {
+                    respuesta+="\n";
+                    ex++;
+                    c=0;
+                }
+                c++;
+            }
+        }
+        else
+        {
+            respuesta= "Arbol vacío";
+        }
+        
+        return respuesta;
     }
-    */
+    
+    private NodoBin<T> balancear (NodoBin<T> alfa) {
+        NodoBin<T> beta, gamma, b, c;
+        if (alfa.getFe()== -2){ //izq
+            beta = alfa.getIzq();
+            if (alfa.getFe()== 1){ //izq-der
+                gamma = beta.getDer();
+                b = gamma.getIzq();
+                c = gamma.getDer();
+                if (alfa == raiz)
+                {
+                    gamma.setPapa(null);
+                    raiz = gamma;
+                }
+                else
+                {
+                    alfa.getPapa().cuelga(gamma);
+                }
+                    beta.cuelga(b,'D');
+                    alfa.cuelga(c,'I');
+                    gamma.cuelga(beta,'I');
+                    gamma.cuelga(alfa,'D');
+                    
+                    beta.setFe(0);
+                    alfa.setFe(0);
+                if (gamma.getFe() == 1)
+                    beta.setFe(-1);
+                else if (gamma.getFe() == -1)
+                    alfa.setFe(1);
+                gamma.setFe(0);
+                return gamma;
+            }
+            else{//izq-izq
+                gamma = beta.getIzq();
+                //b = gamma.getDer();
+                c = beta.getDer();
+                if (alfa == raiz){
+                    beta.setPapa(null);
+                    raiz = beta;
+                }
+                else
+                {
+                    alfa.getPapa().cuelga(beta);
+                }
+                    
+                    alfa.cuelga(c,'I');
+                    beta.cuelga(gamma,'I');
+                    beta.cuelga(alfa,'D');
+                //actualizo factores de equilibro
+                    if (beta.getFe() == -1)
+                    {
+                        alfa.setFe(0);
+                        beta.setFe(0);
+                    }
+                    else
+                    {
+                        alfa.setFe(-1);
+                        beta.setFe(1);
+                    }
+                return beta;
+            }   
+        }
+        else{//der
+            beta = alfa.getDer();
+            if (beta.getFe() == -1){//der-izq
+                gamma = beta.getIzq();
+                b = gamma.getIzq();
+                c = gamma.getDer();
+                if (alfa == raiz)
+                {
+                    gamma.setPapa(null);
+                    raiz = gamma;
+                }
+                else
+                {
+                   alfa.getPapa().cuelga(gamma);
+                }
+                    
+                alfa.cuelga(b,'D');
+                beta.cuelga(c,'I');
+                gamma.cuelga(alfa,'I');
+                gamma.cuelga(beta,'D');
+                //actualizo factores de equilibro
+                alfa.setFe(0);
+                beta.setFe(0);
+                if (gamma.getFe() == 1)
+                    alfa.setFe(-1);
+                else if (gamma.getFe() == -1)
+                    beta.setFe(1);
+                gamma.setFe(0);
+                return gamma;
+            }
+            else{//der-der
+                gamma = beta.getDer();
+                b = beta.getIzq();
+                //c = gamma.getIzq();
+                if (alfa == raiz){
+                    beta.setPapa(null);
+                    raiz = beta;
+                }
+                else
+                {
+                    alfa.getPapa().cuelga(beta);
+                }
+                
+                alfa.cuelga(b,'D');
+                beta.cuelga(alfa,'I');
+                beta.cuelga(gamma,'D');
+                //actualizo factores de equilibro
+                if (beta.getFe() == 1){
+                    alfa.setFe(0);
+                    beta.setFe(0);
+                }
+                else{
+                    alfa.setFe(1);
+                    beta.setFe(-1);
+                }
+                return beta;
+            }
+        }
+    }
     
     public void checarFe(NodoBin<T> actual)
     {
@@ -252,56 +398,6 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
             actual=papa;
         }
         
-    }
-    
-    public int getAltura(NodoBin<T> actual)
-    {
-        if(actual==null)
-        {
-            return 0;
-        }
-        int a1= getAltura(actual.getIzq());
-        int a2= getAltura(actual.getDer());
-        return Math.max(a1,a2)+1;
-    }
-    
-    public String toStringNivel()
-    {
-        String respuesta="";
-        
-        NodoBin<T> actual= raiz;
-        ArrayQueue<NodoBin> cola= new ArrayQueue();
-        ArrayList<T> lista= new ArrayList();
-        cola.enqueue(raiz);
-        actual=raiz;
-        while(actual!=null && !cola.isEmpty())
-        {
-            actual= cola.dequeue();
-            lista.add(actual.getElem());
-            Integer fe= actual.getFe();
-            lista.add((T) fe);
-             if(actual.getIzq()!=null)
-            {
-                cola.enqueue(actual.getIzq());
-            }
-            if(actual.getDer()!=null)
-            {
-                cola.enqueue(actual.getDer());
-            }
-        }
-        
-        respuesta+=lista.get(0)+","+ lista.get(1)+"\n";
-        for(int i=2;i<lista.size()-1;i=i+2)
-        {
-            respuesta+= "["+ lista.get(i)+" ,";
-            respuesta+= lista.get(i+1)+"]"+" ";
-            if(i%4==0)
-            {
-                respuesta+="\n";
-            }
-        }
-
-        return respuesta;
     }
             
 }

@@ -20,13 +20,14 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
         return cont;
     }
     
-    private void actualizarFe(NodoBin<T> actual)
+    private void actualizarFe(NodoBin actual)
     {
-        while(actual!=null)
+        if(actual!=null)
         {
             int fe= calculaFe(actual);
             actual.setFe(fe);
-            actual= actual.getPapa();
+            actualizarFe(actual.getDer());
+            actualizarFe(actual.getIzq());
         }
     }
     
@@ -38,6 +39,27 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
         der= getAltura(actual.getDer());
         resp= der-izq;
         return resp;
+    }
+    
+    public NodoBin<T> encuentraFe2(NodoBin<T> actual)
+    {
+        if(actual==null)
+        {
+            return null;
+        }
+        
+        if(Math.abs(actual.getFe())==2)
+        {
+            return actual;
+        }
+        NodoBin izq= encuentraFe2(actual.getDer());
+        NodoBin der= encuentraFe2(actual.getIzq());
+        
+        if(izq!=null)
+        {
+            return izq;
+        }
+        return der;
     }
     
     public int getAltura(NodoBin<T> actual)
@@ -94,28 +116,36 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
             if (elem.compareTo(papa.getElem()) < 0) 
             {
                 papa.setIzq(nuevo);
-            } else {
+            } else 
+            {
                 papa.setDer(nuevo);
             }
             nuevo.cuelga(papa);
-            actualizarFe(nuevo);
+            actualizarFe(raiz);
+            while(nuevo!=null)
+            {
+                if(Math.abs(nuevo.getFe())==2)
+                {
+                    balancear(nuevo);
+                }
+                nuevo=nuevo.getPapa();
+            }
         }
         cont++;
     }
-     
+       
     public void borra (T elem)
     {
-        NodoBin<T> actual=encuentra(elem);
-        NodoBin<T> papa;
-        cont--;
-        
+        NodoBin<T> actual=encuentra(elem); 
+        System.out.println("actual: "+actual);
         if(actual==null)
         {
             return;
         }
         
-        papa= actual.getPapa();
-        if(actual.getIzq()==null && actual.getDer()==null)
+        cont--;
+        NodoBin papa= actual.getPapa();
+        if(actual.getIzq()==null && actual.getDer()==null) //hoja
         {
             if(actual==raiz)
             {
@@ -123,61 +153,63 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
             }
             else
             {
-                if(papa.getElem().compareTo(actual.getElem())<=0)
+                if(papa.getIzq()==actual)
                 {
-                    papa.setDer(null);
+                    papa.setIzq(null);
                 }
                 else
                 {
-                    papa.setIzq(null);
                     papa.setDer(null);
                 }
             }
         }
-        else if(actual.getIzq()==null || actual.getDer()==null)
+        else if(actual.getIzq()!=null && actual.getDer()!=null) //con hijos
         {
-            NodoBin<T> hijo;
-            if(actual.getIzq()==null)
+            NodoBin<T> suin= actual.getDer();
+            while(suin.getIzq()!=null)
             {
-                hijo=actual.getDer();
+                suin=suin.getIzq();
+            }
+            actual.setElem(suin.getElem());
+            if(suin.getDer()!=null)
+            {
+                suin.getDer().cuelga(suin.getPapa(),'I');
             }
             else
             {
-                hijo=actual.getIzq();
+                suin.getPapa().setDer(null);
             }
-            hijo.cuelga(papa);
-            if(raiz.equals(actual))
+        }
+        else //rama
+        {
+            NodoBin<T> hijo= actual.getDer();
+            if(hijo==null)
+            {
+                hijo= actual.getDer();
+            }
+            if(actual==raiz)
             {
                 raiz=hijo;
-                hijo.setPapa(actual);
-            }
-        }
-        else
-        {
-            NodoBin<T> suc=actual.getDer();
-            while(suc.getIzq()!=null)
-            {
-                suc=suc.getIzq();
-            }
-            papa=suc.getPapa();
-            
-            if(suc.getDer()==null)
-            {
-                //
+                raiz.setPapa(null);
             }
             else
             {
-                papa.cuelga(suc.getDer());
+                hijo.cuelga(papa);
             }
         }
-        actualizarFe(papa);
+        actualizarFe(raiz);
+        NodoBin aux= encuentraFe2(raiz);
+        if(aux!=null)
+        {
+            balancear(aux);
+        }
     }
     
     public NodoBin<T> encuentra(T elem) {
         return encuentraR(elem,raiz);
     }
 
-    public NodoBin<T> encuentraR(T elem, NodoBin<T> actual) {
+    private NodoBin<T> encuentraR(T elem, NodoBin<T> actual) {
         if(actual==null)
         {
             return null;
@@ -194,7 +226,7 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
         }
         return res;
     }
-    
+/*    
     public String toStringNivel()
     {
         String respuesta;
@@ -212,6 +244,7 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
                 actual= cola.dequeue();
                 lista.add(actual.getElem());
                 Integer fe= actual.getFe();
+                System.out.println(fe);
                 lista.add((T) fe);
                 if(actual.getIzq()!=null)
                 {
@@ -244,12 +277,33 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
         
         return respuesta;
     }
+*/
+    
+    String[] niveles;
+    public void imprimirNivel() {
+        niveles = new String[this.getAltura(raiz)];
+
+        imprimirNivel(raiz, 0);
+        for (int i = 0; i < niveles.length; i++) {
+            System.out.println(niveles[i]);
+        }
+    }
+
+    private void imprimirNivel(NodoBin pivote, int nivel2) {
+        if (pivote != null) {
+            niveles[nivel2] = "[ "+pivote.getElem() + ", FE: " + pivote.getFe()+"] "+((niveles[nivel2] != null) ? niveles[nivel2] : "");
+            imprimirNivel(pivote.getDer(), nivel2 + 1);
+            imprimirNivel(pivote.getIzq(), nivel2 + 1);
+        }
+    }
     
     private NodoBin<T> balancear (NodoBin<T> alfa) {
         NodoBin<T> beta, gamma, b, c;
-        if (alfa.getFe()== -2){ //izq
+        if (alfa.getFe()== -2)
+        { //izq
             beta = alfa.getIzq();
-            if (alfa.getFe()== 1){ //izq-der
+            if (alfa.getFe()== 1)
+            { //izq-der
                 gamma = beta.getDer();
                 b = gamma.getIzq();
                 c = gamma.getDer();
@@ -260,25 +314,34 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
                 }
                 else
                 {
-                    alfa.getPapa().cuelga(gamma);
+                    gamma.cuelga(alfa.getPapa());
                 }
-                    beta.cuelga(b,'D');
-                    alfa.cuelga(c,'I');
-                    gamma.cuelga(beta,'I');
-                    gamma.cuelga(alfa,'D');
-                    
-                    beta.setFe(0);
-                    alfa.setFe(0);
-                if (gamma.getFe() == 1)
-                    beta.setFe(-1);
-                else if (gamma.getFe() == -1)
-                    alfa.setFe(1);
-                gamma.setFe(0);
+                  
+                if(b!=null)
+                {
+                    b.cuelga(beta,'D');
+                }
+                else
+                {
+                    beta.setDer(null);
+                }
+                
+                if(c!=null)
+                {
+                  c.cuelga(alfa,'I');  
+                }
+                else
+                {
+                    alfa.setIzq(null);
+                }
+                alfa.cuelga(gamma,'D');
+                beta.cuelga(gamma,'I');
+                actualizarFe(raiz);
                 return gamma;
             }
-            else{//izq-izq
+            else
+            {//izq-izq
                 gamma = beta.getIzq();
-                //b = gamma.getDer();
                 c = beta.getDer();
                 if (alfa == raiz){
                     beta.setPapa(null);
@@ -286,29 +349,28 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
                 }
                 else
                 {
-                    alfa.getPapa().cuelga(beta);
+                    beta.cuelga(alfa.getPapa());
                 }
-                    
-                    alfa.cuelga(c,'I');
-                    beta.cuelga(gamma,'I');
-                    beta.cuelga(alfa,'D');
-                //actualizo factores de equilibro
-                    if (beta.getFe() == -1)
-                    {
-                        alfa.setFe(0);
-                        beta.setFe(0);
-                    }
-                    else
-                    {
-                        alfa.setFe(-1);
-                        beta.setFe(1);
-                    }
+                
+                if(c!=null)
+                {
+                    c.cuelga(alfa,'I');
+                }
+                else
+                {
+                    alfa.setIzq(null);
+                }
+                gamma.cuelga(beta,'I');
+                alfa.cuelga(beta,'D');
+                actualizarFe(raiz);
                 return beta;
             }   
         }
-        else{//der
+        else
+        {//der
             beta = alfa.getDer();
-            if (beta.getFe() == -1){//der-izq
+            if (beta.getFe() == -1)
+            {//der-izq
                 gamma = beta.getIzq();
                 b = gamma.getIzq();
                 c = gamma.getDer();
@@ -319,85 +381,57 @@ public class LinkedBinarySearchTree <T extends Comparable <T>> {
                 }
                 else
                 {
-                   alfa.getPapa().cuelga(gamma);
+                   gamma.cuelga(alfa.getPapa());
                 }
-                    
-                alfa.cuelga(b,'D');
-                beta.cuelga(c,'I');
-                gamma.cuelga(alfa,'I');
-                gamma.cuelga(beta,'D');
-                //actualizo factores de equilibro
-                alfa.setFe(0);
-                beta.setFe(0);
-                if (gamma.getFe() == 1)
-                    alfa.setFe(-1);
-                else if (gamma.getFe() == -1)
-                    beta.setFe(1);
-                gamma.setFe(0);
+                
+                if(b!=null)
+                {
+                    b.cuelga(alfa,'D');
+                }
+                else
+                {
+                    alfa.setDer(null);
+                }
+                if(c!=null)
+                {
+                    c.cuelga(beta,'I');
+                }
+                else
+                {
+                    beta.setIzq(null);
+                }
+                alfa.cuelga(gamma,'I');
+                beta.cuelga(gamma,'D');
+                actualizarFe(raiz);
                 return gamma;
             }
-            else{//der-der
+            else
+            {
                 gamma = beta.getDer();
                 b = beta.getIzq();
-                //c = gamma.getIzq();
                 if (alfa == raiz){
                     beta.setPapa(null);
                     raiz = beta;
                 }
                 else
                 {
-                    alfa.getPapa().cuelga(beta);
+                    beta.cuelga(alfa.getPapa());
                 }
                 
-                alfa.cuelga(b,'D');
-                beta.cuelga(alfa,'I');
-                beta.cuelga(gamma,'D');
-                //actualizo factores de equilibro
-                if (beta.getFe() == 1){
-                    alfa.setFe(0);
-                    beta.setFe(0);
+                if(b!=null)
+                {
+                    b.cuelga(alfa,'D');
                 }
-                else{
-                    alfa.setFe(1);
-                    beta.setFe(-1);
+                else
+                {
+                    alfa.setDer(null);
                 }
+                gamma.cuelga(beta,'D');
+                alfa.cuelga(beta,'I');
+                actualizarFe(raiz);
                 return beta;
             }
         }
-    }
-    
-    public void checarFe(NodoBin<T> actual)
-    {
-        NodoBin<T> papa= actual.getPapa();
-        int feP= papa.getFe();
-        boolean termine=false;
-        
-        while(!termine && actual!=raiz)
-        {
-            papa=actual.getPapa();
-            if(actual==papa.getIzq())
-            {
-                papa.setFe(feP+1);
-            }
-            else
-            {
-                papa.setFe(feP-1);
-            }
-            
-            if(Math.abs(feP)==2)
-            {
-//                actual=rotar(actual);
-            }
-            else
-            {
-                if(Math.abs(feP)==1)
-                {
-                    termine=true;
-                }
-            }
-            actual=papa;
-        }
-        
     }
             
 }

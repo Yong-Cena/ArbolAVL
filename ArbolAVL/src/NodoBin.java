@@ -33,6 +33,11 @@ public class NodoBin <T extends Comparable <T>>{
         return elem;
     }
     
+    public void setElem(T elem)
+    {
+        this.elem=elem;
+    }
+    
     public int getFe()
     {
         return fe;
@@ -84,13 +89,13 @@ public class NodoBin <T extends Comparable <T>>{
     {
         if(direccion=='I')
         {
-            izq=papa;
+            papa.setIzq(this);
         }
         else
         {
             if(direccion=='D')
             {
-                der=papa;
+                papa.setDer(this);
             }
             else
             {
